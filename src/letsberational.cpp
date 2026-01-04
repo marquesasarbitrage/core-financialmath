@@ -1,20 +1,45 @@
 #include "../include/core-financialmath/letsberational.hpp"
 
-double LetsBeRational::getPutPrice(double logMoneyness, double timeToMaturity, double sigma) {
+double LetsBeRational::getNormalizedIntrisicValue(double x, bool isCall) {
 
-    return _getPrice(logMoneyness,sigma*std::sqrt(timeToMaturity), false);
+    int putCallFlag = isCall ? 1:-1;
+    if (putCallFlag*x <= 0) return 0;
+    double bm = exp(.5*x);
+    return std::max(putCallFlag*(bm - 1/bm), 0.0);
 }
 
-double LetsBeRational::getCallPrice(double logMoneyness, double timeToMaturity, double sigma) {
+double LetsBeRational::getNormalizedPrice(double x, double timeToMaturity, double sigma, bool isCall) {
 
-    return _getPrice(logMoneyness,sigma*std::sqrt(timeToMaturity), true);
+    return _getNormalizedPrice(x, sigma * std::sqrt(timeToMaturity), isCall);
 }
 
-LetsBeRational::ImpliedVolatilityResult LetsBeRational::getNewtonNormalizedVolatility(double beta, double x, bool isCall) {
+double LetsBeRational::getNormalizedPrice(double x, double normalizedSigma, bool isCall) {
+
+    return _getNormalizedPrice(x, normalizedSigma, isCall);
+}
+
+double LetsBeRational::getPrice(double futurePrice, double strike, double timeToMaturity, double sigma, bool isCall) {
+
+    return std::sqrt(futurePrice*strike)*getNormalizedPrice(std::log(futurePrice/strike), timeToMaturity, sigma, isCall);
+}
+
+LetsBeRational::ImpliedVolatilityResult LetsBeRational::getImpliedVolatility(double normalizedPrice, double x, double timeToMaturity,  bool isCall) {
+
+    ImpliedVolatilityResult result = getImpliedNormalizedVolatility(normalizedPrice,x, isCall);
+    result.value_ =  result.value_ / std::sqrt(timeToMaturity); 
+    return result;
+}
+
+LetsBeRational::ImpliedVolatilityResult LetsBeRational::getImpliedVolatility(double price, double futurePrice, double strike, double timeToMaturity, bool isCall) {
+
+    return getImpliedVolatility(price / std::sqrt(futurePrice*strike), std::log(futurePrice/strike), timeToMaturity, isCall);
+}
+
+LetsBeRational::ImpliedVolatilityResult LetsBeRational::getImpliedNormalizedVolatility(double normalizedPrice, double x, bool isCall) {
 
     ImpliedVolatilityResult result; 
     try {
-        std::tuple<double, double, int> tupleResult = _getNewtonNormalizedVolatility(beta,x,isCall);
+        std::tuple<double, double, int> tupleResult = _getNewtonNormalizedVolatilityUnsafe(normalizedPrice,x,isCall);
         
         result.value_ = std::get<0>(tupleResult);
         result.error_ = nullptr;
@@ -27,20 +52,6 @@ LetsBeRational::ImpliedVolatilityResult LetsBeRational::getNewtonNormalizedVolat
         result.targetValue_ = NAN; 
         result.iterations_ = 0;
     }
-    return result;
-}
-
-LetsBeRational::ImpliedVolatilityResult LetsBeRational::getCallImpliedVolatility(double logMoneyness, double timeToMaturity, double normalizedUndiscountedPrice) {
-
-    ImpliedVolatilityResult result = getNewtonNormalizedVolatility(normalizedUndiscountedPrice,logMoneyness,true);
-    result.value_ = result.value_/std::sqrt(timeToMaturity);
-    return result;
-}
-
-LetsBeRational::ImpliedVolatilityResult LetsBeRational::getPutImpliedVolatility(double logMoneyness, double timeToMaturity, double normalizedUndiscountedPrice) {
-
-    ImpliedVolatilityResult result = getNewtonNormalizedVolatility(normalizedUndiscountedPrice,logMoneyness,false);
-    result.value_ = result.value_/std::sqrt(timeToMaturity);
     return result;
 }
 
@@ -73,12 +84,12 @@ double LetsBeRational::_getCallPrice(double x, double normalizedSigma) {
 
     if (x>0) { 
         
-        return _getNormalizedIntrisicValue(x, true)+_getCallPrice(-x,normalizedSigma);
+        return getNormalizedIntrisicValue(x, true)+_getCallPrice(-x,normalizedSigma);
     }
 
     if (normalizedSigma<=0) {
         
-        return _getNormalizedIntrisicValue(x, true);
+        return getNormalizedIntrisicValue(x, true);
     }
 
     if ( x < normalizedSigma*H_LARGE  &&  0.5*normalizedSigma*normalizedSigma+x < normalizedSigma*(T_SMALL+H_LARGE)) {
@@ -110,21 +121,6 @@ double LetsBeRational::_getVolga(double x, double normalizedSigma) {
 
     if (normalizedSigma<=DBL_MIN) return 0;
     return (x/(normalizedSigma*normalizedSigma*normalizedSigma) - .125)*_getVega(x, normalizedSigma);
-}
-
-double LetsBeRational::_getPrice(double x, double normalizedSigma, bool isCall) {
-
-    if (normalizedSigma<=DBL_MIN) return _getNormalizedIntrisicValue(x, isCall);
-    if (!isCall) x = -x;
-    return _getCallPrice(x,normalizedSigma);
-}
-
-double LetsBeRational::_getNormalizedIntrisicValue(double x, bool isCall) {
-
-    int putCallFlag = isCall ? 1:-1;
-    if (putCallFlag*x <= 0) return 0;
-    double bm = exp(.5*x);
-    return std::max(putCallFlag*(bm - 1/bm), 0.0);
 }
 
 double LetsBeRational::_getRationalCubicInterpolate(double x, double x0, double x1,double y0, double y1,double dy0, double dy1,double r) {
@@ -198,19 +194,19 @@ std::tuple<double, double, double, double, double, double, double, double, doubl
  
     int c = isCall ? 1 : -1;
     if (c*x>0) {
-      beta = fabs(std::max(beta-_getNormalizedIntrisicValue(x, isCall),0.));
+      beta = fabs(std::max(beta-getNormalizedIntrisicValue(x, isCall),0.));
       c = -c; isCall = !isCall;
     }
     if (c<0) { x = -x; c = -c; isCall = !isCall; }
     
     double b_max = exp(.5*x);
     double sigma_c = sqrt(2*abs(x));
-    double b_c = _getPrice(x, sigma_c, isCall);
+    double b_c = _getNormalizedPrice(x, sigma_c, isCall);
     double v_c = _getVega(x, sigma_c);
     double sigma_u = (v_c>DBL_MIN) ? sigma_c + (b_max - b_c)/v_c : sigma_c;
     double sigma_l = (v_c>DBL_MIN) ? sigma_c - b_c/v_c : sigma_c;
-    double b_u = _getPrice(x, sigma_u, isCall);
-    double b_l = _getPrice(x, sigma_l, isCall);
+    double b_u = _getNormalizedPrice(x, sigma_u, isCall);
+    double b_l = _getNormalizedPrice(x, sigma_l, isCall);
     return std::make_tuple(beta,x,b_max,sigma_l, sigma_c, sigma_u, b_l, b_c, b_u, v_c, isCall); 
 }
 
@@ -270,7 +266,7 @@ std::function<double(double)> LetsBeRational::_getTargetFirstDerivative(double b
     else return [bMax, x](double s) {return _getVega(x, s)/(bMax - _getCallPrice(x, s));};
 }
 
-std::tuple<double, double, int> LetsBeRational::_getNewtonNormalizedVolatility(double beta, double x, bool isCall) {
+std::tuple<double, double, int> LetsBeRational::_getNewtonNormalizedVolatilityUnsafe(double beta, double x, bool isCall) {
 
     auto [beta_,x_,b_max,sigma_l, sigma_c, sigma_u, b_l, b_c, b_u, v_c, is_call_] = _getInitialData(beta, x, isCall);
     
@@ -289,3 +285,9 @@ std::tuple<double, double, int> LetsBeRational::_getNewtonNormalizedVolatility(d
     else std::rethrow_exception(newton.getError());
 }
 
+double LetsBeRational::_getNormalizedPrice(double x, double normalizedSigma, bool isCall) {
+
+    if (normalizedSigma<=DBL_MIN) return getNormalizedIntrisicValue(x, isCall);
+    if (!isCall) x = -x;
+    return _getCallPrice(x,normalizedSigma);
+}

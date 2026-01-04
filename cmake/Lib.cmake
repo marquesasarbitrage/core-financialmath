@@ -3,6 +3,7 @@ add_library(
     STATIC 
         src/nelsonsiegelsvensson.cpp
         src/letsberational.cpp
+        src/lewis.cpp
         src/errors.cpp)
 target_link_libraries(core-financialmath PUBLIC core-datetime)
 target_link_libraries(core-financialmath PUBLIC core-math)

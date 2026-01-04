@@ -14,6 +14,8 @@ class LetsBeRational {
 
     public: 
 
+        static constexpr double PI = 3.14159265358979323846;
+
         struct ImpliedVolatilityResult {
 
             double value_; 
@@ -22,17 +24,18 @@ class LetsBeRational {
             double targetValue_;
         };
 
-        static double _getPrice(double x, double normalizedSigma, bool isCall);
-        static ImpliedVolatilityResult getNewtonNormalizedVolatility(double beta, double x, bool isCall);
-        static double getPutPrice(double logMoneyness, double timeToMaturity, double sigma); 
-        static double getCallPrice(double logMoneyness, double timeToMaturity, double sigma); 
-        static ImpliedVolatilityResult getCallImpliedVolatility(double logMoneyness, double timeToMaturity, double normalizedUndiscountedPrice); 
-        static ImpliedVolatilityResult getPutImpliedVolatility(double logMoneyness, double timeToMaturity, double normalizedUndiscountedPrice); 
+        static double getNormalizedPrice(double x, double normalizedSigma, bool isCall);
+        static double getNormalizedPrice(double x, double timeToMaturity, double sigma, bool isCall);
+        static double getPrice(double futurePrice, double strike, double timeToMaturity, double sigma, bool isCall);
+        static double getNormalizedIntrisicValue(double x, bool isCall);
+        static ImpliedVolatilityResult getImpliedVolatility(double normalizedPrice, double x, double timeToMaturity, bool isCall);
+        static ImpliedVolatilityResult getImpliedVolatility(double price, double futurePrice, double strike, double timeToMaturity, bool isCall); 
+        static ImpliedVolatilityResult getImpliedNormalizedVolatility(double normalizedPrice, double x, bool isCall);
+
 
     private: 
         static constexpr double H_LARGE = -10.0;
         static constexpr double T_SMALL = 0.21;
-        static constexpr double PI = 3.14159265358979323846;
         static constexpr double SQRT_TWO_PI = 2.50662827463100050242;
         static constexpr double ONE_OVER_SQRT_TWO = 0.7071067811865475244008443621048490392848359376887;
         static constexpr double ONE_OVER_SQRT_TWO_PI = 0.3989422804014326779399460599343818684758586311649;
@@ -44,7 +47,7 @@ class LetsBeRational {
         static double _getCallPrice(double x, double normalizedSigma);
         static double _getVega(double x, double normalizedSigma);
         static double _getVolga(double x, double normalizedSigma);
-        static double _getNormalizedIntrisicValue(double x, bool isCall);
+        static double _getNormalizedPrice(double x, double normalizedSigma, bool isCall);
 
         static double _getRationalCubicInterpolate(double x, double x0, double x1,double y0, double y1,double dy0, double dy1,double r); 
 
@@ -64,6 +67,7 @@ class LetsBeRational {
         static std::function<double(double)> _getTarget(double beta, double x, double bLower, double bUpper);
         static std::function<double(double)> _getTargetFirstDerivative(double beta, double x, double bLower, double bUpper); 
 
-        static std::tuple<double, double, int> _getNewtonNormalizedVolatility(double beta, double x, bool isCall);
+        static std::tuple<double, double, int> _getNewtonNormalizedVolatilityUnsafe(double beta, double x, bool isCall);
+        
 };
 

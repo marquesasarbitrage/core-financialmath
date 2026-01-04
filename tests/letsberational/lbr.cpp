@@ -12,25 +12,23 @@ bool isClose(double a, double b, double tol = 1e-3) {
 
 void testOptionPrice()
 {
-    // Input parameters
-    double S = 100.0;    // Stock price
-    double K = 100.0;    // Strike price
-    double r = 0.05;     // Risk-free rate
-    double q = 0.02;     // Dividend yield
-    double sigma = 0.20; // Volatility
-    double T = 2.0;      // Time to maturity
+    double S = 100.0;   
+    double K = 100.0;    
+    double r = 0.05;     
+    double q = 0.02;     
+    double sigma = 0.20;
+    double T = 2.0;     
 
-    // Option prices and Greeks
     double callPrice = 13.5218;
     double putPrice = 7.9266;
 
-    double x = log(S*exp((r-q)*T)/K); 
+    double F = S*std::exp((r-q)*T);
+    double x = std::log(F/K); 
     double normalizedSigma = sigma*sqrt(T);
-
-    double modelCallPrice = sqrt(S*exp((r-q)*T)*K)*LetsBeRational::getCallPrice(x,T,sigma)*exp(-r*T);
-    double modelPutPrice = sqrt(S*exp((r-q)*T)*K)*LetsBeRational::getPutPrice(x,T,sigma)*exp(-r*T);
-    LetsBeRational::ImpliedVolatilityResult impliedVolPut = LetsBeRational::getPutImpliedVolatility(x,T,LetsBeRational::getPutPrice(x,T,sigma));
-    LetsBeRational::ImpliedVolatilityResult impliedVolCall = LetsBeRational::getCallImpliedVolatility(x,T,LetsBeRational::getCallPrice(x,T,sigma));
+    double modelCallPrice = LetsBeRational::getPrice(F,K,T,sigma, true)*std::exp(-r*T);
+    double modelPutPrice = LetsBeRational::getPrice(F,K,T,sigma, false)*std::exp(-r*T);
+    LetsBeRational::ImpliedVolatilityResult impliedVolPut = LetsBeRational::getImpliedVolatility(modelPutPrice*std::exp(r*T),F,K,T,false);
+    LetsBeRational::ImpliedVolatilityResult impliedVolCall = LetsBeRational::getImpliedVolatility(modelCallPrice*std::exp(r*T),F,K,T, true);
     assert(isClose(modelCallPrice, callPrice, 1e-4));
     assert(isClose(modelPutPrice, putPrice, 1e-4));
     assert(isClose(impliedVolPut.value_, .2, 1e-3));
@@ -64,8 +62,8 @@ void writeNumericalResultLetsBeRational(double sigmaMin, double sigmaMax, double
 
         for (double xx: moneyness) {
 
-            price = LetsBeRational::_getPrice(xx,s,true);
-            LetsBeRational::ImpliedVolatilityResult result = LetsBeRational::getNewtonNormalizedVolatility(price,xx,true);
+            price = LetsBeRational::getNormalizedPrice(xx,s,true);
+            LetsBeRational::ImpliedVolatilityResult result = LetsBeRational::getImpliedNormalizedVolatility(price,xx,true);
             estSigma = result.value_; 
             std::string errorMessage;
             if (result.error_ != nullptr) {
