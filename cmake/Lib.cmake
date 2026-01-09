@@ -4,6 +4,7 @@ add_library(
         src/errors/base.cpp
         src/nelsonsiegelsvensson.cpp
         src/letsberational.cpp
+        src/baw.cpp
         src/lewis.cpp)
 target_link_libraries(core-financialmath PUBLIC core-datetime)
 target_link_libraries(core-financialmath PUBLIC core-math)

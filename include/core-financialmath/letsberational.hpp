@@ -10,6 +10,7 @@
 // The pricing of commodity contract - Black (1976) : https://www.sciencedirect.com/science/article/abs/pii/0304405X76900246
 // Let's be rational - Jäckel (2015) : http://www.jaeckel.org/
 
+
 class LetsBeRational {
 
     public: 
