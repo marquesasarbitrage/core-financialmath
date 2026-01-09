@@ -1,9 +1,9 @@
 #pragma once 
 #include <iostream>
 #include <cfloat>
-#include "errors.hpp"
-#include "core-math/optim.hpp"
-#include "core-math/probability/distributions.hpp"
+#include "errors/main.hpp"
+#include "core-math/optim/newtonraphson.hpp"
+#include "core-math/probability/univariate.hpp"
 
 // Model references 
 // The pricing of options and corporate liabilities - Black and Scholes (1973) : https://www.jstor.org/stable/1831029

@@ -25,5 +25,23 @@ namespace FinMathErrorRegistry
         };
 
     }
+
+    namespace TimeSerie {
+
+        class InvalidSizeError final: public FinMathLibraryError {
+            protected: 
+                std::string getErrorMessage() const override; 
+        };
+
+        class StartDateAfterEndDateError final: public FinMathLibraryError {
+            protected: 
+                std::string getErrorMessage() const override; 
+        };
+
+        class InvalidReferenceDateError final: public FinMathLibraryError {
+            protected: 
+                std::string getErrorMessage() const override; 
+        };
+    }
     
 };

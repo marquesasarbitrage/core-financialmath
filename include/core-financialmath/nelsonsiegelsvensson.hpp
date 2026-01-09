@@ -1,10 +1,10 @@
 #pragma once 
 #include <iostream>
 #include <map>
-#include "core-math/regression.hpp"
-#include "core-math/curveinterpolation.hpp"
-#include "core-math/optim.hpp"
-#include "core-math/loss.hpp"
+#include "core-math/statistics/regression.hpp"
+#include "core-math/interpolation.hpp"
+#include "core-math/optim/neldermead.hpp"
+#include "core-math/statistics/residuals.hpp"
 
 // Model refrences 
 // Parsimonious Modelling of Yield Curve - Nelson and Siegel (1987) : https://www.jstor.org/stable/2352957
@@ -107,7 +107,7 @@ class NelsonSiegelCalibration
         bool isSpotRate_;
         double gridSize_;
 
-        EstimatorLoss getLoss(double tau1, double tau2, bool useSvensson) const;
+        Residuals getLoss(double tau1, double tau2, bool useSvensson) const;
         double getNelsonSiegelIniatialTau() const;
         std::vector<double>  getSvenssonIniatialTau() const;
 

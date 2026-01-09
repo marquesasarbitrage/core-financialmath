@@ -89,7 +89,7 @@ std::shared_ptr<NelsonSiegelFamily> NelsonSiegelCalibration::fitOLS(double tau1,
     return nss;
 }
 
-EstimatorLoss NelsonSiegelCalibration::getLoss(double tau1, double tau2, bool useSvensson) const
+Residuals NelsonSiegelCalibration::getLoss(double tau1, double tau2, bool useSvensson) const
 {
     std::shared_ptr<NelsonSiegelFamily> nss = fitOLS(tau1,tau2, useSvensson);
     std::vector<double> estimates; 
@@ -99,7 +99,7 @@ EstimatorLoss NelsonSiegelCalibration::getLoss(double tau1, double tau2, bool us
         estimates.push_back(isSpotRate_ ? nss->getRate(d.first) : nss->getInstantaneousForwardRate(d.first));
         trueValues.push_back(d.second);
     }
-    return EstimatorLoss(estimates,trueValues);
+    return Residuals(estimates,trueValues);
 }
 
 double NelsonSiegelCalibration::getNelsonSiegelIniatialTau() const
@@ -158,7 +158,7 @@ std::shared_ptr<NelsonSiegelFamily> NelsonSiegelCalibration::fitNelsonSiegel() c
     std::function<double(std::vector<double>)> targetFunction = [*this](std::vector<double> params)
     { 
         if (params[0]==0.0) return 1e10;
-        EstimatorLoss loss = getLoss(params[0],10.0, false);
+        Residuals loss = getLoss(params[0],10.0, false);
         return loss.getMSE();
     };
 
@@ -177,7 +177,7 @@ std::shared_ptr<NelsonSiegelFamily>  NelsonSiegelCalibration::fitSvensson() cons
     std::function<double(std::vector<double>)> targetFunction = [*this](std::vector<double> params)
     { 
         if (params[0]==0.0 or params[1]==0.0) return 1e10;
-        EstimatorLoss loss = getLoss(params[0], params[1], true);
+        Residuals loss = getLoss(params[0], params[1], true);
         return loss.getMSE();
     };
     std::vector<double> params0 = getSvenssonIniatialTau(); 
