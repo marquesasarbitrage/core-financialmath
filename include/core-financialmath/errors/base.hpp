@@ -16,16 +16,30 @@ namespace FinMathErrorRegistry {
             mutable std::string cachedMessage_;  // must be mutable to modify in const what()
     };
 
-    namespace LetsBeRational {
 
-        class InvalidNormalizedPriceRangeError final: public FinMathLibraryError
-        {
-            protected: 
-                std::string getErrorMessage() const override; 
-        };
+    class NonPositiveYearFractionError final: public FinMathLibraryError
+    {
+        protected: 
+            std::string getErrorMessage() const override; 
+    };
 
-    }
+    class NonPositiveStrikePriceError final: public FinMathLibraryError
+    {
+        protected: 
+            std::string getErrorMessage() const override; 
+    };
 
-    
+    class NonPositiveSpotPriceError final: public FinMathLibraryError
+    {
+        protected: 
+            std::string getErrorMessage() const override; 
+    };
+
+    class NonPositiveImpliedVolatilityError final: public FinMathLibraryError
+    {
+        protected: 
+            std::string getErrorMessage() const override; 
+    };
+
 
 }

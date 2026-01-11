@@ -2,6 +2,8 @@ add_library(
     core-financialmath 
     STATIC 
         src/errors/base.cpp
+        src/errors/letsberational.cpp
+        src/toolbox.cpp
         src/nelsonsiegelsvensson.cpp
         src/letsberational.cpp
         src/baw.cpp

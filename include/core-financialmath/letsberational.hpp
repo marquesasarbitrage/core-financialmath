@@ -1,7 +1,7 @@
 #pragma once 
 #include <iostream>
 #include <cfloat>
-#include "errors/main.hpp"
+#include "toolbox.hpp"
 #include "core-math/optim/newtonraphson.hpp"
 #include "core-math/probability/univariate.hpp"
 
@@ -32,6 +32,7 @@ class LetsBeRational {
         static ImpliedVolatilityResult getImpliedVolatility(double normalizedPrice, double x, double timeToMaturity, bool isCall);
         static ImpliedVolatilityResult getImpliedVolatility(double price, double futurePrice, double strike, double timeToMaturity, bool isCall); 
         static ImpliedVolatilityResult getImpliedNormalizedVolatility(double normalizedPrice, double x, bool isCall);
+        static double getInitialGuessImpliedVolatility(double price, double futurePrice, double strike, double timeToMaturity, bool isCall);
 
 
     private: 

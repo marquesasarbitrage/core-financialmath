@@ -24,6 +24,34 @@ void testTemplateBAW(double mu, double r,double sigma, double T, bool isCall, st
     }
 };
 
+void testTemplateBAWImpliedVolatility(double mu, double r,double sigma, double T, bool isCall, std::vector<double> baw_prices)
+{
+    std::map<double,double> baw_prices_map =  { 
+        {80, baw_prices[0]},
+        {90, baw_prices[1]},
+        {100, baw_prices[2]},
+        {110, baw_prices[3]},
+        {120, baw_prices[4]}
+    };
+    std::vector<double> spot_list = {80, 90,100,110,120};
+    double price, F;
+    LetsBeRational::ImpliedVolatilityResult result;
+    for (double s: spot_list){
+        price = BaroneAdesiWhaley::getPrice(s,mu,100,T,sigma,r,isCall);
+        result = BaroneAdesiWhaley::getImpliedVolatility(price,s,100,T,r,isCall);
+        if (!result.error_) {
+
+            assert(isClose(result.value_, sigma, 1e-2));
+        } else {
+
+            try { std::rethrow_exception(result.error_); }
+            catch (const std::exception& e) { std::cout << e.what() << std::endl; }
+
+        }
+       
+    }
+};
+
 void testBaroneAdesiWhalley() {
 
     // Call and mu = 0.04
@@ -106,9 +134,72 @@ void testBaroneAdesiWhalley() {
 
 }
 
+void testBaroneAdesiWhalleyImpliedVolatility() {
+
+
+    // Put and mu = 0.0
+    std::vector<double> baw_prices =  {20.0,10.58,3.93,0.94,0.15};
+    testTemplateBAWImpliedVolatility(.0,.08,.2,.25,false,baw_prices);
+    baw_prices =  {20.0,10.53,3.9,0.93,0.15};
+    testTemplateBAWImpliedVolatility(0.0,.12,.2,.25,false,baw_prices);
+    baw_prices =  {20.93,13.39,7.84,4.23,2.12};
+    testTemplateBAWImpliedVolatility(.0,.08,.4,.25,false,baw_prices);
+    baw_prices =  {20.04,11.48,5.48,2.15,0.7};
+    testTemplateBAWImpliedVolatility(.0,.08,.2,.5,false,baw_prices);
+
+    baw_prices =  {.04,.70,3.93,10.81,20.02};
+    testTemplateBAWImpliedVolatility(.00,.08,.2,.25,true,baw_prices);
+    baw_prices =  {.04,.70,3.9,10.75,20.0};
+    testTemplateBAWImpliedVolatility(.00,.12,.2,.25,true,baw_prices);
+    baw_prices =  {1.17,3.53,7.84,14.08,21.86};
+    testTemplateBAWImpliedVolatility(.00,.08,.4,.25,true,baw_prices);
+    baw_prices =  {.30,1.72,5.48,11.9,20.34};
+    testTemplateBAWImpliedVolatility(.00,.08,.2,.5,true,baw_prices);
+
+    baw_prices =  {22.4,16.5,12.03,8.69,6.22};
+    testTemplateBAWImpliedVolatility(.0,.08,.2,3.0,false,baw_prices);
+
+    baw_prices =  {4.2,7.54,12.03,17.64,24.30};
+    testTemplateBAWImpliedVolatility(.00,.08,.2,3.0,true,baw_prices);
+    
+
+}
+
+void testBaroneAdesiWhalleyImpliedVolatility2(double S, double T, double sigma, double r) {
+
+    std::cout << "Expected Sigma: " << sigma << std::endl;
+
+    double callPrice = BaroneAdesiWhaley::getPrice(S,0.0,100,T,sigma,r,true);
+    double putPrice = BaroneAdesiWhaley::getPrice(S,0.0,100,T,sigma,r,false);
+
+    std::cout << "Call Price: " << callPrice << std::endl;
+    std::cout << "Put Price: " << putPrice << std::endl;
+
+    auto p1 = std::chrono::high_resolution_clock::now();
+
+    LetsBeRational::ImpliedVolatilityResult resultPut = BaroneAdesiWhaley::getImpliedVolatility(putPrice,S,100,T,r,false);
+
+    auto p2 = std::chrono::high_resolution_clock::now();
+
+    //LetsBeRational::ImpliedVolatilityResult resultCall = BaroneAdesiWhaley::getImpliedVolatility(callPrice,S,100,T,r,true);
+
+    auto p3 = std::chrono::high_resolution_clock::now();
+
+    //std::cout << "Result Sigma Call: " << resultCall.value_ << std::endl;
+
+    std::cout << "Result Sigma Put: " << resultPut.value_ << std::endl;
+
+    //std::cout << "Time Taken Call: " << static_cast<std::chrono::duration<double>>(p3 - p2).count() << std::endl;
+
+    std::cout << "Time Taken Put: " << static_cast<std::chrono::duration<double>>(p2 - p1).count() << std::endl;
+
+}
+
 int main() {
 
     testBaroneAdesiWhalley();
+    testBaroneAdesiWhalleyImpliedVolatility();
+    //testBaroneAdesiWhalleyImpliedVolatility2(80,.25,.2,.08);
     std::cout << "All tests of the Barone-Adesi Whaley object have been passed successfully" << std::endl;
     return 0;
 }

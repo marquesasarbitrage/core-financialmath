@@ -10,10 +10,9 @@ namespace FinMathErrorRegistry
         return cachedMessage_.c_str();
     }
     
-    namespace LetsBeRational {
-
-        std::string InvalidNormalizedPriceRangeError::getErrorMessage() const {return "The normalized price must be strictly superior to 0 and inferior to the b_max threshold.";}
-
-    }
+    std::string NonPositiveYearFractionError::getErrorMessage() const {return "Year fraction must be non-positve to be valid.";}
+    std::string NonPositiveStrikePriceError::getErrorMessage() const {return "Strike price must be non-positve to be valid.";}
+    std::string NonPositiveSpotPriceError::getErrorMessage() const {return "Spot price must be non-positve to be valid.";}
+    std::string NonPositiveImpliedVolatilityError::getErrorMessage() const {return "Implied volatility must be non-positve to be valid.";}
 
 };

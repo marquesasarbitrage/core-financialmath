@@ -23,16 +23,39 @@ double LetsBeRational::getPrice(double futurePrice, double strike, double timeTo
     return std::sqrt(futurePrice*strike)*getNormalizedPrice(std::log(futurePrice/strike), timeToMaturity, sigma, isCall);
 }
 
+double LetsBeRational::getInitialGuessImpliedVolatility(double price, double futurePrice, double strike, double timeToMaturity, bool isCall) {
+
+    return _getInitialGuess(price / std::sqrt(futurePrice*strike),std::log(futurePrice/strike), isCall);
+}
+
 LetsBeRational::ImpliedVolatilityResult LetsBeRational::getImpliedVolatility(double normalizedPrice, double x, double timeToMaturity,  bool isCall) {
 
-    ImpliedVolatilityResult result = getImpliedNormalizedVolatility(normalizedPrice,x, isCall);
-    result.value_ =  result.value_ / std::sqrt(timeToMaturity); 
-    return result;
+    try {
+        FinmathToolbox::checkYearFraction(timeToMaturity);
+        ImpliedVolatilityResult result = getImpliedNormalizedVolatility(normalizedPrice,x, isCall);
+        result.value_ =  result.value_ / std::sqrt(timeToMaturity); 
+        return result;
+
+    } catch (const std::exception& e) {
+        
+        return {0, std::current_exception(), 0, NAN};
+
+    }
 }
 
 LetsBeRational::ImpliedVolatilityResult LetsBeRational::getImpliedVolatility(double price, double futurePrice, double strike, double timeToMaturity, bool isCall) {
 
-    return getImpliedVolatility(price / std::sqrt(futurePrice*strike), std::log(futurePrice/strike), timeToMaturity, isCall);
+    try {
+        FinmathToolbox::checkStrikePrice(strike);
+        FinmathToolbox::checkSpotPrice(futurePrice);
+        FinmathToolbox::checkYearFraction(timeToMaturity);
+        return getImpliedVolatility(price / std::sqrt(futurePrice*strike), std::log(futurePrice/strike), timeToMaturity, isCall);
+
+    } catch (const std::exception& e) {
+        
+        return {0, std::current_exception(), 0, NAN};
+
+    }
 }
 
 LetsBeRational::ImpliedVolatilityResult LetsBeRational::getImpliedNormalizedVolatility(double normalizedPrice, double x, bool isCall) {
@@ -46,7 +69,6 @@ LetsBeRational::ImpliedVolatilityResult LetsBeRational::getImpliedNormalizedVola
         result.iterations_ = std::get<2>(tupleResult);
         result.targetValue_ = std::get<1>(tupleResult);
     } catch (const std::exception& e) {
-        ImpliedVolatilityResult result; 
         result.value_ = 0.0;
         result.error_ = std::current_exception();
         result.targetValue_ = NAN; 
@@ -114,7 +136,7 @@ double LetsBeRational::_getVega(double x, double normalizedSigma) {
 
     double ax = fabs(x);
     double nsSq = normalizedSigma*normalizedSigma;
-    return (ax<=0) ? ONE_OVER_SQRT_TWO_PI*exp(-0.125*nsSq) : ( (normalizedSigma<=0 || normalizedSigma<=ax*std::sqrt(DBL_MIN)) ? 0 : ONE_OVER_SQRT_TWO_PI*exp(-0.5*(x*x/nsSq+.25*nsSq)));
+    return (ax<=0) ? ONE_OVER_SQRT_TWO_PI*exp(-0.125*nsSq) : ( (normalizedSigma<=0 || normalizedSigma<=ax*std::sqrt(DBL_MIN)) ? 0.0 : ONE_OVER_SQRT_TWO_PI*exp(-0.5*(x*x/nsSq+.25*nsSq)));
 }
 
 double LetsBeRational::_getVolga(double x, double normalizedSigma) {
