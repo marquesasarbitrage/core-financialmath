@@ -3,6 +3,7 @@ add_library(
     STATIC 
         src/errors/base.cpp
         src/errors/letsberational.cpp
+        src/errors/svi.cpp
 
         src/toolbox.cpp
 
@@ -10,6 +11,7 @@ add_library(
 
         src/letsberational.cpp
         src/baw.cpp
+        src/svi.cpp
         src/lewis.cpp
         src/nss.cpp
 )

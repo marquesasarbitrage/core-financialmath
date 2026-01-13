@@ -9,3 +9,6 @@ target_link_libraries(finmath-lewis PUBLIC core-financialmath)
 
 add_executable(finmath-baw ${CMAKE_CURRENT_SOURCE_DIR}/tests/baw.cpp)
 target_link_libraries(finmath-baw PUBLIC core-financialmath)
+
+add_executable(finmath-svi ${CMAKE_CURRENT_SOURCE_DIR}/tests/svi.cpp)
+target_link_libraries(finmath-svi PUBLIC core-financialmath)
